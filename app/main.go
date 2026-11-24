@@ -35,7 +35,7 @@ func main() {
 	receivedText := string(buf[:n])
 	fmt.Println("Received:", receivedText)
 
-	if _, err := conn.Write([]byte("PONG")); err != nil {
+	if _, err := conn.Write([]byte("+PONG\r\n")); err != nil {
 		fmt.Println("Write error:", err)
 		return
 	}
