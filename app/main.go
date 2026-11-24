@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -41,25 +40,25 @@ func main() {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	scanner := bufio.NewScanner(conn)
+	buf := make([]byte, 1024)
 
 	for {
 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
-		if !scanner.Scan() {
-			break // Client disconnected (EOF), timed out, or read error
+		n, err := conn.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				fmt.Println("Read error:", err)
+			}
+			return
 		}
 
-		receivedText := strings.TrimSpace(scanner.Text())
-		fmt.Println("Received:", receivedText)
+		received := string(buf[:n])
+		fmt.Printf("Received (%d bytes): %q\n", n, received)
 
 		if _, err := conn.Write([]byte("+PONG\r\n")); err != nil {
 			fmt.Println("Write error:", err)
 			return
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Connection closed with error:", err)
 	}
 }
